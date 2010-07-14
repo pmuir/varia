@@ -5,8 +5,10 @@
   <UserPref name="autoplay" display_name="Auto start?" datatype="bool" default_value="true"/>
   <UserPref name="hidebuttons" display_name="Hide Buttons?" datatype="bool" default_value="false"/>  
   <UserPref name="interval" display_name="Delay (ms)" datatype="int" default_value="5000"/>    
-  <UserPref name="perpage" display_name="Photos to show" datatype="int" default_value="50" />
-  <!-- Purpose is unknown <UserPref name="page" display_name="Page" datatype="int" default_value="1" />-->
+  <UserPref name="perpage" display_name="Photos to show" datatype="int" default_value="20" />
+  <UserPref name="page" display_name="Page of photos to use" datatype="int" default_value="1" />
+  <UserPref name="randompage" display_name="Use a random page (ignores the page set above, you must enter the total number of pages)" datatype="bool" default_value="false" />
+  <UserPref name="totalpages" display_name="Total number of pages" datatype="int" default_value="5" />
   <UserPref name="theme" display_name="Theme" datatype="enum" default_value="black">
     <EnumValue value="black" display_value="Black (default)" />
 
@@ -22,12 +24,20 @@
       <script type="text/javascript" src="http://api.flickrshow.com/v7/flickrshow.js"></script>
       <script type="text/javascript">
         var prefs = new _IG_Prefs();
+        var page = 1;
+        if (prefs.getBool('randompage')) {
+          // Add one, as page starts from 1, not 0
+          page = (Math.floor(Math.random() * prefs.getInt('totalpage')) + 1;
+        } else {
+          page = prefs.getInt('page');
+        }
         var photos = new flickrshow('photos', {
           'autoplay':prefs.getBool('autoplay'),
           'tags':prefs.getString('tags'),
           'theme':prefs.getString('theme'),
           'hide_buttons':prefs.getBool('hidebuttons'),
           'interval':prefs.getInt('interval'),
+          'page':page,
           'per_page':prefs.getInt('perpage')
         });
       </script>
