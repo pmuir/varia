@@ -27,7 +27,7 @@
         var page = 1;
         if (prefs.getBool('randompage')) {
           // Add one, as page starts from 1, not 0
-          page = (Math.floor(Math.random() * prefs.getInt('totalpage')) + 1;
+          page = Math.floor(Math.random() * prefs.getInt('totalpage')) + 1;
         } else {
           page = prefs.getInt('page');
         }
