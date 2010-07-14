@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+	<ModulePrefs title="Event List" description="Shows upcoming events from a (Google) Calendar" author="Google Developers with modifications by Pete Muir" author_email="pmuir@bleepbleep.org.uk" render_inline="never"/>
+	<UserPref name="max_events" display_name="Events to show:" default_value="4" datatype="enum">
+		<EnumValue value="1"/>
+		<EnumValue value="2"/>
+		<EnumValue value="3"/>
+		<EnumValue value="4"/>
+		<EnumValue value="5"/>
+		<EnumValue value="6"/>
+		<EnumValue value="7"/>
+		<EnumValue value="8"/>
+		<EnumValue value="9"/>
+		<EnumValue value="10"/>
+	</UserPref>
+        
+        <UserPref name="xmlbasicurl" display_name="Calendar XML URL"/>
+
+        <UserPref name="icalurl" display_name="Calendar ICAL URL"/>
+
+        <UserPref name="htmlurl" display_name="Calendar HTML URL"/>
+
+	<UserPref name="odd_color" display_name="Odd row color:" default_value="white" datatype="enum">
+		<EnumValue value="white"/>
+		<EnumValue value="light yellow"/>
+		<EnumValue value="light blue"/>
+	</UserPref>
+
+	<UserPref name="even_color" display_name="Even row color:" default_value="light yellow" datatype="enum">
+		<EnumValue value="white"/>
+		<EnumValue value="light yellow"/>
+		<EnumValue value="light blue"/>
+	</UserPref>
+
+	<Content type="html">
+		<![CDATA[
+
+<div id="content__MODULE_ID__"><i>Loading...</i></div>
+<style> 
+        p { font-family: Arial; font-size: 80%; font-size: 80% }
+	p.gray__MODULE_ID__ { color:#808080; font-style: italic }
+	p.bold__MODULE_ID__ { font-weight: bold }
+	p.addtocal__MODULE_ID__ { font-size: 70%; color:#707070; font-style: italic }
+                                
+        td.dec__MODULE_ID__	{ padding: 2px 10px 4px 10px }
+        th.dec__MODULE_ID__	{ padding: 2px 0px 2px 0px; font-size: 90% }
+</style> 
+
+<script type="text/javascript">
+	var dayNames__MODULE_ID__ = new Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+	var monthNames__MODULE_ID__ = new Array("January", "February", "March", "April", "May", "June", "July", "August",
+					"September", "October", "November", "December");
+	var colorToHex__MODULE_ID__ = {"white": "#ffffff", "light yellow": "#ffffdd", "light blue": "#eeffff"};
+
+	// Given a Calendar XML summary field split by the " " delimiter, such as:
+	//	("When:", "2006-05-12", "09:00:00", "to", "10:30:00", ...)
+	// this function converts it into a usable JavaScript Date object.
+
+function isInt(x) {
+   var y=parseInt(x);
+   if (isNaN(y)) return false;
+   return x==y && x.toString()==y.toString();
+ } 
+
+	function getEntryDate__MODULE_ID__(splitSummary) {
+		var parsedDate = null;
+
+		if(splitSummary.length > 4 && splitSummary[0] == "When:") {
+			var year = splitSummary[4].substring(0,4);
+                        
+			if(splitSummary.length > 5 && splitSummary[5].indexOf(":") == 2) {
+				parsedDate = splitSummary[3] + " " + splitSummary[2] + ", " + year + " " + splitSummary[5];
+			} else if (isInt(year)) {
+				parsedDate = splitSummary[3] + " " + splitSummary[2] + ", " + year;
+			}
+		}
+                if (parsedDate != null) {
+			return new Date(parsedDate);
+                } else {
+ 			return null;
+   		}
+	}
+
+	// Returns a short, plain-text representation of the specified Date object.
+	function getDateString__MODULE_ID__(targetDate) {
+		var now = new Date();
+		var result = dayNames__MODULE_ID__[targetDate.getDay()] + ", " +
+		             monthNames__MODULE_ID__[targetDate.getMonth()] + " " +
+			     targetDate.getDate();
+
+		if(now.getFullYear() != targetDate.getFullYear()) {
+			result += ", " + targetDate.getFullYear();
+		}
+
+		return result;
+	}
+
+	function getRowHTML__MODULE_ID__(title, links, parsedDate, endDate, hasTime, num) {
+		var result = "";
+		var htmlLink = "http://code.google.com";
+		var prefs = new _IG_Prefs(__MODULE_ID__);
+
+		for(var x = 0; x < links.length; x++) {
+			if(links[x].getAttribute("type") == "text/html") {
+				htmlLink = links[x].getAttribute("href");
+				break;
+			}
+		}
+
+		if(parsedDate != null) {
+			// Left cell: Event date.
+			result	+= "<tr><th width=\"80%\" align=\"left\" class=\"dec__MODULE_ID__\" bgcolor=\""
+				+ colorToHex__MODULE_ID__[prefs.getString(num % 2 == 0 ? "even_color" : "odd_color")]
+				+  "\"><p class=\"bold__MODULE_ID__\">" + getDateString__MODULE_ID__(parsedDate); 
+                        if (endDate != null && endDate > parsedDate) {
+				result += " - "+ getDateString__MODULE_ID__(endDate);
+                        }
+                        result  += "</p></th>";
+
+			// Right cell: Event time, or "all day" if none listed.
+			result += "<th width=\"20%\" align=\"right\" class=\"dec__MODULE_ID__\" bgcolor=\""
+				+ colorToHex__MODULE_ID__[prefs.getString(num % 2 == 0 ? "even_color" : "odd_color")]
+				+ "\"><p class=\"gray__MODULE_ID__\">";
+			if(hasTime) {
+				var hours = parsedDate.getHours();
+				var minutes = parsedDate.getMinutes();
+
+				if(hours == 0 || hours == 12) result += "12";
+				else if(hours < 12) result += hours;
+				else result += (hours - 12);
+
+				result += ":" + (minutes < 10 ? "0" : "") + minutes + (hours < 12 ? "am" : "pm");
+			} else {
+				result += "All day";
+			}
+			result += "</p></th></tr>";
+		}
+
+		result	+= "<tr><td align=\"left\" class=\"dec__MODULE_ID__\" bgcolor=\""
+			+  colorToHex__MODULE_ID__[prefs.getString(num % 2 == 0 ? "even_color" : "odd_color")]
+			+  "\" colspan=\"2\"><p><a href=\"" + htmlLink + "\" target=\"_parent\">" + title + "</a></p></td></tr>";
+		return result;
+	}
+
+	function loadDec__MODULE_ID__() {
+		// The feed URL.
+                var url = new _IG_Prefs(__MODULE_ID__).getString('xmlbasicurl') + "?max-results=1000000000";
+		_IG_FetchXmlContent(url, function (response) {
+			if(response == null || typeof(response) != "object" || response.firstChild == null) {
+				_gel("content__MODULE_ID__").innerHTML = "<i>Calendar currently unavailable.</i>";
+				return;
+			}
+
+			// Start building up the calendar's HTML content.
+			var html = "<table cellspacing=\"0\" cellpadding=\"2\" width=\"100%\">";
+
+			var feed = response.getElementsByTagName("feed").item(0);
+			var entries = feed.getElementsByTagName("entry");
+
+			// Extract relevant fields from each entry and build our array.
+			var entryArray = new Array(0);
+			for(var i = 0; i < entries.length; i++) {
+				var title = entries[i].getElementsByTagName("title").item(0).lastChild.nodeValue;
+				var summary = entries[i].getElementsByTagName("summary").item(0).lastChild.nodeValue;
+				var links = entries[i].getElementsByTagName("link");
+
+				var splitSummary = summary.split(" ");
+				var hasTime = (splitSummary[5].indexOf(":") == 2);
+				var startDate = getEntryDate__MODULE_ID__(splitSummary);
+                                var endDate = null;
+                                if (splitSummary[5] == "to") {
+                                   endSplitSummary = splitSummary.slice(6);
+                                   endSplitSummary.unshift("When:");
+                                   endDate = getEntryDate__MODULE_ID__(endSplitSummary);
+                                }
+                                if (splitSummary[6] == "to") {
+                                   endSplitSummary = splitSummary.slice(7);
+                                   endSplitSummary.unshift("When:");
+                                   endDate = getEntryDate__MODULE_ID__(endSplitSummary);
+                                }
+
+				entryArray.push({title: title, links: links, date: startDate, endDate: endDate, time: hasTime});
+			}
+
+			// Sort the array of entries, since it might not be sorted.
+			entryArray.sort(function cmp(a, b){
+				if(a.date < b.date) return -1;
+				else if(a.date == b.date) return 0;
+				return 1;
+			});
+
+			// Add events from the sorted array to the HTML output.
+			var prefs = new _IG_Prefs(__MODULE_ID__);
+			var maxEvents = prefs.getInt("max_events");
+			var eventsAdded = 0;
+
+			for(var i = 0; i < entryArray.length; i++) {
+				if(entryArray[i].date >= new Date()) {
+					html += getRowHTML__MODULE_ID__(entryArray[i].title, entryArray[i].links,
+							entryArray[i].date, entryArray[i].endDate, entryArray[i].time, i);
+
+					eventsAdded++;
+					if(maxEvents > 0 && eventsAdded == maxEvents) break;
+				}
+			}
+
+			// Stick an "Add to Calendar" button at the end of the table.
+			html += "<tr><td colspan=\"2\" align=\"right\"><p class=\"addtocal__MODULE_ID__\">Subscribe: " +
+                                "<a href=\"" + prefs.getString('icalurl') + "\" target=\"_blank\">" +
+                                "<img src=\"https://www.google.com/calendar/hosted/fellwanderers.com/images/ical.gif\" border=0></a></p></td></tr><tr><td colspan=\"2\" align=\"right\"><p class=\"addtocal__MODULE_ID__\">View: " +
+				"<a href=\"" + prefs.getString('htmlurl') + "\" target=\"_blank\">" +
+				"<img src=\"https://www.google.com/calendar/hosted/fellwanderers.com/images/html.gif\" border=0></a></p></td></tr>";
+			html += "</table>";
+
+			_gel("content__MODULE_ID__").innerHTML = html;
+		}); 
+	}
+
+	_IG_RegisterOnloadHandler(loadDec__MODULE_ID__);
+</script>
+		]]>
+	</Content>
+</Module>
