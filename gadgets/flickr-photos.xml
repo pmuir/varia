@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs title="Flickr Photo Stream" description="A gadget wrapping http://www.flickrshow.com/" author="Pete Muir" author_email="pmuir@bleepbleep.org.uk" height="300" width="400" />
+  <UserPref name="tags" display_name="Comma Separated List of Flickr Public Tags" required="true" />
+  <UserPref name="autoplay" display_name="Auto start?" datatype="bool" default_value="true"/>
+  <UserPref name="hidebuttons" display_name="Hide Buttons?" datatype="bool" default_value="false"/>  
+  <UserPref name="interval" display_name="Delay (ms)" datatype="int" default_value="5000"/>    
+  <UserPref name="perpage" display_name="Photos to show" datatype="int" default_value="50" />
+  <!-- Purpose is unknown <UserPref name="page" display_name="Page" datatype="int" default_value="1" />-->
+  <UserPref name="theme" display_name="Theme" datatype="enum" default_value="black">
+    <EnumValue value="black" display_value="Black (default)" />
+
+    <EnumValue value="white" display_value="White" />
+  </UserPref>
+  <Content type="html">
+    <![CDATA[
+      
+      <div id="photos" style="background:#FFF; width: 100%; height: 100%">
+        <p>An error occurred loading the photos, please try again later</p>
+      </div>
+	
+      <script type="text/javascript" src="http://api.flickrshow.com/v7/flickrshow.js"></script>
+      <script type="text/javascript">
+        var prefs = new _IG_Prefs();
+        var photos = new flickrshow('photos', {
+          'autoplay':prefs.getBool('autoplay'),
+          'tags':prefs.getString('tags'),
+          'theme':prefs.getString('theme'),
+          'hide_buttons':prefs.getBool('hidebuttons'),
+          'interval':prefs.getInt('interval'),
+          'per_page':prefs.getInt('perpage')
+        });
+      </script>
+    ]]>
+  </Content>
+</Module>
